@@ -1,0 +1,22 @@
+#!/bin/sh
+
+IPT=iptables
+$IPT -N FWD_VIRTUAL
+$IPT -t nat -N PST_VIRTUAL
+
+$IPT -A FORWARD -m state --state INVALID -j DROP
+$IPT -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+$IPT -A FORWARD -j FWD_VIRTUAL
+
+$IPT -t nat -A POSTROUTING -j PST_VIRTUAL
+
+$IPT -F FWD_VIRTUAL
+$IPT -A FWD_VIRTUAL -s 10.0.4.0/24 -i br0 -j ACCEPT
+$IPT -A FWD_VIRTUAL -s 10.0.4.0/24 -i tap+ -j ACCEPT
+
+$IPT -t nat -F PST_VIRTUAL
+$IPT -t nat -A PST_VIRTUAL -s 10.0.4.0/24 -o wlan0 -j MASQUERADE
+$IPT -t nat -A PST_VIRTUAL -s 10.0.4.0/24 -o wlan1 -j MASQUERADE
+$IPT -t nat -A PST_VIRTUAL -s 10.0.4.0/24 -o eth0 -j MASQUERADE
+$IPT -t nat -A PST_VIRTUAL -s 10.0.4.0/24 -o eth2 -j MASQUERADE
+$IPT -t nat -A PST_VIRTUAL -s 10.0.4.0/24 -o ppp0 -j MASQUERADE
